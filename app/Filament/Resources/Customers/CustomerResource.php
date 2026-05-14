@@ -77,7 +77,7 @@ class CustomerResource extends Resource
         ];
     }
 
-    // Optional: Add navigation badge showing customer count
+    // Navigation badge showing customer count
     public static function getNavigationBadge(): ?string
     {
         if ($tenant = Filament::getTenant()) {

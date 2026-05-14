@@ -69,7 +69,7 @@ class ProductResource extends Resource
     }
 
  
-    //Navigation badge showing customer count
+    //Navigation badge showing Product count
         public static function getNavigationBadge(): ?string
         {
             if ($tenant = Filament::getTenant()) {
