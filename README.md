@@ -1,10 +1,11 @@
 WiredWise POS - Multi-Tenant Point of Sale System
 <p align="center"> <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="WiredWise POS Logo"> </p><p align="center"> <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a> <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a> <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a> <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a> </p>
-Overview
-WiredWise POS is a powerful, multi-tenant Point of Sale system built with Laravel 13.9.0 and Filament v5.6.0. It serves multiple business types including bars, restaurants, chemists/pharmacies, and supermarkets with complete data isolation between tenants.
 
-Key Features
+
+## Key Features
+
 Multi-Tenancy Architecture
+
 Complete Data Isolation: Row-level security ensures tenants never see each other's data
 
 Tenant Types Support: Separate configurations for bars, restaurants, chemists, and supermarkets
@@ -13,7 +14,7 @@ Super Admin Controls: Only dev.wiredwise@outlook.com can manage tenants
 
 User-Tenant Relationship: Users can belong to multiple tenants with different roles
 
-POS Capabilities
+## POS Capabilities
 Product Management: Create, edit, delete products with stock tracking
 
 Customer Management: Track customers, loyalty points, and purchase history
@@ -24,7 +25,7 @@ Payment Tracking: Support for cash, card, mobile money, and credit payments
 
 Real-time Calculations: Automatic total updates as items are added
 
-Technical Features
+## Technical Features
 PostgreSQL Database: Robust relational database with Row Level Security (RLS)
 
 Filament Admin Panel: Modern, responsive admin interface
@@ -35,7 +36,7 @@ Soft Deletes: Safe record deletion with recovery options
 
 Automated Tenant Scoping: Automatic filtering of data by current tenant
 
-Requirements
+## Requirements
 PHP 8.2 or higher
 
 PostgreSQL 12 or higher
@@ -48,17 +49,21 @@ Laravel 13.9.0
 
 Filament 5.6.0
 
-Installation
+## Installation
+
 1. Clone the Repository
-bash
+
 git clone https://github.com/wamwagii/wiredwise-pos.git
+
 cd wiredwise-pos
+
 2. Install Dependencies
-bash
+
 composer install
 npm install
+
 3. Environment Configuration
-bash
+
 cp .env.example .env
 Update your .env file with database credentials:
 
@@ -69,40 +74,43 @@ DB_PORT=5432
 DB_DATABASE=wiredwise_pos
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
+
 4. Generate Application Key
-bash
+
 php artisan key:generate
 5. Run Migrations
-bash
+
 php artisan migrate:fresh --seed
 6. Create Admin User
-bash
+
 php artisan make:filament-user
 7. Install Filament Assets
-bash
+
 php artisan filament:install --panels
 php artisan filament:assets
+
 8. Compile Assets
-bash
+
 npm run build
 9. Start Development Server
-bash
+
 php artisan serve
 Visit http://localhost:8000/admin to access the admin panel.
 
-Architecture
+## Architecture
 Multi-Tenancy Implementation
 WiredWise POS uses a shared database with row-level security approach:
 
-text
-Shared Database Schema
-├── tenants (central tenant registry)
-├── tenant_user (user-tenant assignments)
-├── products (tenant-scoped)
-├── customers (tenant-scoped)
-├── invoices (tenant-scoped)
-└── invoice_items (tenant-scoped)
-Key Components
+
+## Shared Database Schema
+tenants (central tenant registry)
+tenant_user (user-tenant assignments)
+products (tenant-scoped)
+customers (tenant-scoped)
+invoices (tenant-scoped)
+invoice_items (tenant-scoped)
+
+## Key Components
 Tenant Model: Represents each business (bar, restaurant, chemist, supermarket)
 
 User Model: Implements HasTenants interface for Filament tenancy
@@ -111,7 +119,7 @@ Global Scopes: Automatically filter queries by current tenant
 
 RLS Policies: Database-level security (optional but available)
 
-Database Schema
+## Database Schema
 Tenants Table
 sql
 - id (primary key)
@@ -123,6 +131,7 @@ sql
 - is_active (boolean)
 - soft_deletes
 - timestamps
+
 Products Table
 sql
 - id (primary key)
@@ -134,6 +143,7 @@ sql
 - is_active
 - soft_deletes
 - timestamps
+
 Customers Table
 sql
 - id (primary key)
@@ -157,7 +167,9 @@ sql
 - notes
 - soft_deletes
 - timestamps
-Security
+
+## Security
+
 Tenant Isolation
 Global Scopes: All tenant-aware models have global scopes that filter by tenant_id
 
@@ -165,7 +177,7 @@ Route Binding: Resource routes automatically scope to current tenant
 
 Form Validation: tenant_id is automatically set on create operations
 
-Super Admin Restrictions: Only dev.wiredwise@outlook.com can manage tenants
+Super Admin Restrictions: Only superadmin@pos.com can manage tenants
 
 Authentication & Authorization
 Filament Authentication: Built-in authentication system
@@ -174,49 +186,16 @@ Tenant Access Control: Users can only access tenants they're assigned to
 
 Role-Based Permissions: Different roles (admin, manager, staff, cashier)
 
-Usage Examples
-Creating a Tenant (Super Admin Only)
-bash
-# Login as super admin
-# Navigate to Tenants -> Create
-# Fill in business details
-# Assign users to tenant
-Adding Products
-php
-// Products are automatically scoped to current tenant
-$product = Product::create([
-    'name' => 'Heineken Beer',
-    'selling_price' => 5.00,
-    'category' => 'alcohol',
-    // tenant_id is auto-set
-]);
-Creating Invoices
-php
-// Create invoice with items
-$invoice = Invoice::create([
-    'customer_id' => $customer->id,
-    'subtotal' => 100.00,
-    'tax_amount' => 10.00,
-    'total_amount' => 110.00,
-    'payment_method' => 'cash',
-    'payment_status' => 'paid',
-]);
 
-// Add items
-$invoice->items()->create([
-    'product_id' => $product->id,
-    'quantity' => 2,
-    'unit_price' => 5.00,
-    'total_price' => 10.00,
-]);
-Testing
+## Testing
 Run Tests
-bash
+
 php artisan test
 Test Multi-Tenancy Isolation
-bash
+
 php artisan tinker
-php
+
+
 // Test data isolation
 $barTenant = Tenant::where('name', 'Sunset Bar')->first();
 $chemistTenant = Tenant::where('name', 'Health Plus Chemist')->first();
@@ -232,7 +211,7 @@ Eager Loading: Proper relationship loading to prevent N+1 queries
 
 Caching: Optional Redis cache for frequently accessed data
 
-Deployment
+## Deployment
 Production Requirements
 Web Server: Nginx or Apache with PHP 8.2+
 
