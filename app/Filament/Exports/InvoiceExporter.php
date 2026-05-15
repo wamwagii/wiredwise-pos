@@ -16,8 +16,7 @@ class InvoiceExporter extends Exporter
     {
         return [
             ExportColumn::make('invoice_number')
-                ->label('Invoice Number')
-                ->primary(),
+                ->label('Invoice Number'),
             
             ExportColumn::make('customer.name')
                 ->label('Customer Name'),
@@ -48,8 +47,7 @@ class InvoiceExporter extends Exporter
                 ->label('Payment Method'),
             
             ExportColumn::make('payment_status')
-                ->label('Payment Status')
-                ->badge(),
+                ->label('Payment Status'),
             
             ExportColumn::make('paid_at')
                 ->label('Paid Date')
@@ -71,8 +69,6 @@ class InvoiceExporter extends Exporter
         if ($failedRowsCount = $export->getFailedRowsCount()) {
             $body .= ' ' . Number::format($failedRowsCount) . ' ' . str('row')->plural($failedRowsCount) . ' failed to export.';
         }
-
-        $body .= ' Click the notification to download your file.';
 
         return $body;
     }

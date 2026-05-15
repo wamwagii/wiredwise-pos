@@ -24,7 +24,7 @@ class InvoiceForm
                     ->default(fn() => optional(Filament::getTenant())->id),
                     
                 Hidden::make('user_id')
-                    ->default(fn() => auth()->id()),
+                    ->default(fn() => Filament::getTenant()?->id),
                     
                 Section::make('Invoice Information')
                     ->schema([
