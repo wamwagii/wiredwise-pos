@@ -10,7 +10,7 @@ Complete Data Isolation: Row-level security ensures tenants never see each other
 
 Tenant Types Support: Separate configurations for bars, restaurants, chemists, and supermarkets
 
-Super Admin Controls: Only dev.wiredwise@outlook.com can manage tenants
+Super Admin Controls: Only superadmin@pos.com can manage tenants
 
 User-Tenant Relationship: Users can belong to multiple tenants with different roles
 
