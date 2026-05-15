@@ -30,6 +30,8 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->tenant(Tenant::class)
+            ->sidebarCollapsibleOnDesktop()
+            ->databaseNotifications()
             
             ->colors([
                 'primary' => Color::Amber,

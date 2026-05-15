@@ -22,4 +22,11 @@ class EditProduct extends EditRecord
             RestoreAction::make(),
         ];
     }
+
+    // Redirects to the product list page after editing a product
+     protected function getRedirectUrl(): string
+
+    {       
+         return $this->getResource()::getUrl('index');
+    }
 }

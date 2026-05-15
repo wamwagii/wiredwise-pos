@@ -64,6 +64,7 @@ class CreateInvoice extends CreateRecord
         );
     }
     
+    // Redirects to the invoice list page after creating a new invoice
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
@@ -73,4 +74,6 @@ class CreateInvoice extends CreateRecord
     {
         return 'Invoice created successfully!';
     }
+
+    
 }

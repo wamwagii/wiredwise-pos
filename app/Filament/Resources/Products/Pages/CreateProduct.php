@@ -27,6 +27,8 @@ class CreateProduct extends CreateRecord
         return $data;
     }
     
+// Redirects to the product list page after creating a new product
+
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');

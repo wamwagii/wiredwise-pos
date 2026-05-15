@@ -22,4 +22,11 @@ class EditCustomer extends EditRecord
             RestoreAction::make(),
         ];
     }
+
+    // Redirects to the customer list page after creating a new customer
+     protected function getRedirectUrl(): string
+
+    {       
+         return $this->getResource()::getUrl('index');
+    }
 }

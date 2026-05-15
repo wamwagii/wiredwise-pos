@@ -11,6 +11,8 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Facades\Filament;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 
 class InvoiceForm
 {
@@ -19,20 +21,20 @@ class InvoiceForm
         return $schema
             ->components([
                 Hidden::make('tenant_id')
-                    ->default(fn() => Filament::getTenant()?->id),
+                    ->default(fn() => optional(Filament::getTenant())->id),
                     
                 Hidden::make('user_id')
-                    ->default(fn() => optional(Filament::getTenant())->id),
+                    ->default(fn() => auth()->id()),
                     
                 Section::make('Invoice Information')
                     ->schema([
-                        // Invoice Number - Auto-generated, never editable
                         TextInput::make('invoice_number')
                             ->label('Invoice Number')
                             ->required()
                             ->unique(ignoreRecord: true)
-                            ->disabled() // Always disabled
-                            ->dehydrated() // Still save the value
+                            ->disabled()
+                            ->dehydrated()
+                            ->default('INV-' . strtoupper(uniqid()))
                             ->helperText('Auto-generated and cannot be changed'),
                             
                         Select::make('customer_id')
@@ -50,7 +52,8 @@ class InvoiceForm
                                 'mobile_money' => 'Mobile Money',
                                 'credit' => 'Credit',
                             ])
-                            ->required(),
+                            ->required()
+                            ->default('cash'),
                             
                         Select::make('payment_status')
                             ->label('Payment Status')
@@ -60,9 +63,19 @@ class InvoiceForm
                                 'partially_paid' => 'Partially Paid',
                                 'refunded' => 'Refunded',
                             ])
-                            ->default('pending')
                             ->required()
-                            ->native(false),
+                            ->default('pending')
+                            ->live()
+                            ->afterStateUpdated(function (Get $get, Set $set) {
+                                // Fix: Use $get to get values, $set to set values
+                                $paymentStatus = $get('payment_status');
+                                if ($paymentStatus === 'paid') {
+                                    $paidAt = $get('paid_at');
+                                    if (empty($paidAt)) {
+                                        $set('paid_at', now()->format('Y-m-d H:i:s'));
+                                    }
+                                }
+                            }),
                             
                         DateTimePicker::make('paid_at')
                             ->label('Paid Date')
@@ -70,7 +83,7 @@ class InvoiceForm
                             ->native(false)
                             ->seconds(false)
                             ->displayFormat('d/m/Y H:i')
-                            ->visible(fn($get) => $get('payment_status') === 'paid'),
+                            ->visible(fn(Get $get) => $get('payment_status') === 'paid'),
                     ])->columns(2),
                     
                 Section::make('Items')
@@ -85,14 +98,15 @@ class InvoiceForm
                                     ->preload()
                                     ->required()
                                     ->live()
-                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                    ->afterStateUpdated(function ($state, Set $set, Get $get) {
                                         $product = \App\Models\Product::find($state);
                                         if ($product) {
                                             $set('unit_price', $product->selling_price);
                                             $quantity = $get('quantity') ?: 1;
                                             $set('total_price', $product->selling_price * $quantity);
-                                            self::recalculateTotals($get, $set);
                                         }
+                                        // Recalculate totals when product changes
+                                        self::recalculateTotals($get, $set);
                                     }),
                                     
                                 TextInput::make('quantity')
@@ -102,9 +116,10 @@ class InvoiceForm
                                     ->default(1)
                                     ->minValue(1)
                                     ->live()
-                                    ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                                    ->afterStateUpdated(function ($state, Set $set, Get $get) {
                                         $price = $get('unit_price') ?: 0;
                                         $set('total_price', $price * $state);
+                                        // Recalculate totals when quantity changes
                                         self::recalculateTotals($get, $set);
                                     }),
                                     
@@ -114,9 +129,10 @@ class InvoiceForm
                                     ->required()
                                     ->prefix('$')
                                     ->live()
-                                    ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                                    ->afterStateUpdated(function ($state, Set $set, Get $get) {
                                         $quantity = $get('quantity') ?: 1;
                                         $set('total_price', $state * $quantity);
+                                        // Recalculate totals when price changes
                                         self::recalculateTotals($get, $set);
                                     }),
                                     
@@ -131,7 +147,12 @@ class InvoiceForm
                             ->minItems(1)
                             ->columnSpanFull()
                             ->cloneable()
-                            ->reorderable(),
+                            ->reorderable()
+                            ->live()
+                            ->afterStateUpdated(function (Get $get, Set $set) {
+                                // Recalculate totals when items are added/removed
+                                self::recalculateTotals($get, $set);
+                            }),
                     ]),
                     
                 Section::make('Totals')
@@ -142,7 +163,8 @@ class InvoiceForm
                             ->prefix('$')
                             ->required()
                             ->disabled()
-                            ->dehydrated(),
+                            ->dehydrated()
+                            ->default(0),
                             
                         TextInput::make('tax_amount')
                             ->label('Tax Amount')
@@ -150,7 +172,7 @@ class InvoiceForm
                             ->prefix('$')
                             ->default(0)
                             ->live()
-                            ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                            ->afterStateUpdated(function (Get $get, Set $set) {
                                 self::recalculateTotals($get, $set);
                             }),
                             
@@ -160,7 +182,7 @@ class InvoiceForm
                             ->prefix('$')
                             ->default(0)
                             ->live()
-                            ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                            ->afterStateUpdated(function (Get $get, Set $set) {
                                 self::recalculateTotals($get, $set);
                             }),
                             
@@ -170,7 +192,8 @@ class InvoiceForm
                             ->prefix('$')
                             ->required()
                             ->disabled()
-                            ->dehydrated(),
+                            ->dehydrated()
+                            ->default(0),
                     ])->columns(4),
                     
                 Section::make('Additional Information')
@@ -183,22 +206,31 @@ class InvoiceForm
             ]);
     }
     
-    // Helper method to recalculate totals
-    protected static function recalculateTotals(callable $get, callable $set): void
+    // Helper method to recalculate subtotal and total
+    protected static function recalculateTotals(Get $get, Set $set): void
     {
+        // Get all items from the repeater
         $items = $get('items') ?? [];
-        $subtotal = 0;
         
+        // Calculate subtotal by summing all item totals
+        $subtotal = 0;
         foreach ($items as $item) {
-            $subtotal += $item['total_price'] ?? 0;
+            if (isset($item['total_price']) && is_numeric($item['total_price'])) {
+                $subtotal += (float) $item['total_price'];
+            }
         }
         
-        $set('subtotal', $subtotal);
+        // Update subtotal field
+        $set('subtotal', round($subtotal, 2));
         
-        $tax = $get('tax_amount') ?? 0;
-        $discount = $get('discount_amount') ?? 0;
+        // Get tax and discount
+        $tax = (float) $get('tax_amount') ?? 0;
+        $discount = (float) $get('discount_amount') ?? 0;
+        
+        // Calculate total
         $total = $subtotal + $tax - $discount;
         
-        $set('total_amount', max(0, $total));
+        // Update total amount (ensure it's not negative)
+        $set('total_amount', round(max(0, $total), 2));
     }
 }

@@ -10,6 +10,7 @@ class EditInvoice extends EditRecord
 {
     protected static string $resource = InvoiceResource::class;
     
+    // Redirects to the invoice list page after editing an invoice
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
